@@ -57,7 +57,7 @@ no empty floor.
 `generate=True` on a `{*}` slot writes free text instead of searching short answers (a one-sentence summary, a caption):
 greedy by default, or `generate={"temperature": 0.7, "top_p": 0.8, "top_k": 20, "seed": 0, "n": 1}` to sample `n` sequences
 reproducibly; `max_tokens` caps the length (up to 100). Answers come back as `{text, finish}` ("stop" at the closing quote, a newline
-or end of text; "length" at the cap) with no probability; same account feature, billed as a generated slot (2,000 tokens flat against
+or end of text; "length" at the cap) with no probability; same account feature on the hosted API, where it is billed as a generated slot (2,000 tokens flat against
 500 for a searched one); no `top_k` / `calibration` with it.
 
 Writing extraction templates (what the tests showed):
@@ -163,24 +163,29 @@ breaks the micro-layer's lock (a sha256 over them), and the pack's fallback mode
 **Other packs and your own queries in one call:** `score()` takes `packs=[pack(id, ...)]` next to `queries`; each
 result carries `packs` (`pack_result(out, id)`). `pack()` takes the same decision arguments as `moderate()`.
 
-## Pricing and usage
+## Pricing and usage (hosted API only)
+
+**There is no charge for using this client, and none for a spinf-serve you run yourself.** The client is Apache 2.0, the
+server is Apache 2.0, and a server of your own bills nothing: you pay for your own GPU, its `usage` block reports token
+counts only (no `billed_tokens`), and every feature is on. Everything in this section applies to the **hosted API at
+`api.spinf.com`** alone, where an account is billed per token at the model's price.
 
 ```python
 from spinf_client import billed_tokens
 
-pricing = client.pricing()            # what this account can use: models, media rates, extraction, content limit
+pricing = client.pricing()            # hosted API: what this account can use: models, media rates, extraction, content limit
 m = next(x for x in pricing["models"] if x["model"] == "spinf-12b")
 billed_tokens(m, text_tokens=150, frames={"low": 20}, query_tokens=23, floor_tokens=14, slots_per_content=[1])  # 2687
 ```
 
-Billed tokens = text (content text and timestamps) + images and frames at the model's rate per detail + audio per
-second + question and floor tokens + extraction (500 tokens a searched slot, 2,000 a generated one), at least 1,000 a
-call, at the model's price per million. The response's `usage.prompt_tokens_details` reports `text_tokens`, `media`
+On the hosted API, billed tokens = text (content text and timestamps) + images and frames at the model's rate per detail +
+audio per second + question and floor tokens + extraction (500 tokens a searched slot, 2,000 a generated one), at least
+1,000 a call, at the model's price per million. The response's `usage.prompt_tokens_details` reports `text_tokens`, `media`
 (`images`, `video_frames`, `audio_seconds`, `billed_media_tokens`) and `extraction` (`slots`, `generated_slots`,
-`billed_tokens`);
-`usage.billed_tokens` is what is charged. `client.models()` and `client.account()` wrap `GET /v1/models` and
-`GET /v1/account`.
+`billed_tokens`); `usage.billed_tokens` is what is charged. `client.models()` wraps `GET /v1/models` on both; `client.account()`
+and `client.pricing()` exist on the hosted API only.
 
-Errors raise `SpinfError` (`status`, `code`, `message`, `param`): e.g. `403 feature_not_enabled` (extraction not
-enabled), `403 media_not_allowed` (video not enabled), `400 too_many_extractions`, `400 content_too_long` (over the
-account's content limit), `413 body_too_large`. 429 / 5xx (including `503 warming_up`) and timeouts are retried.
+Errors raise `SpinfError` (`status`, `code`, `message`, `param`). On both: `400 too_many_extractions`, `413 body_too_large`.
+On the hosted API only, from the account's features and limits: `403 feature_not_enabled` (extraction not enabled),
+`403 media_not_allowed` (video not enabled), `400 content_too_long` (over the account's content limit). 429 / 5xx (including
+`503 warming_up`) and timeouts are retried.
