@@ -69,11 +69,11 @@ class SpinfClient:
         return self._call("GET", "/v1/models")
 
     def account(self) -> dict[str, Any]:
-        """GET /v1/account: the key's account: balance, limits, models enabled."""
+        """GET /v1/account (hosted API only): the key's account: balance, limits, models enabled."""
         return self._call("GET", "/v1/account")
 
     def pricing(self) -> dict[str, Any]:
-        """GET /v1/account/pricing: the prices of what this account can use, only that (its models, the media it is
+        """GET /v1/account/pricing (hosted API only; a spinf-serve of your own bills nothing and has no such endpoint): the prices of what this account can use, only that (its models, the media it is
         cleared for, extraction if enabled, its content limit), in tokens. See billed_tokens()."""
         return self._call("GET", "/v1/account/pricing")
 
@@ -340,7 +340,7 @@ def billed_tokens(
     floor_tokens: int = 0,
     slots_per_content: list[int] | None = None,
 ) -> int:
-    """Estimate a call's billed tokens from one model's entry of pricing()["models"]: text (content text and video
+    """Hosted API only: estimate a call's billed tokens from one model's entry of pricing()["models"]: text (content text and video
     timestamps) + images and video frames at the model's rate per detail ({"low": n, ...}) + audio seconds (rounded up)
     + question and floor tokens + extraction slots (per content: the first at first_per_content_tokens, each next at
     next_per_content_tokens), at least min_billed_tokens_per_call. The response's usage.billed_tokens is the truth."""

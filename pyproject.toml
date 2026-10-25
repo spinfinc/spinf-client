@@ -1,6 +1,6 @@
 [project]
 name = "spinf-client"
-version = "0.3.0"
+version = "0.3.1"
 description = "Python client for the spinf scoring API, hosted or self-hosted with spinf-serve: scored queries, extraction slots, images and video frames, prompt packs and content moderation"
 readme = "README.md"
 license = "Apache-2.0"
