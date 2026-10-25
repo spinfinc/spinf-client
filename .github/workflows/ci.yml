@@ -1,0 +1,37 @@
+# Lint and the test suite on every push and pull request. Two tests compare this repository with its neighbours: the vendored
+# evaluator against spinf-serve's pipeline.py, and the pack evaluator against the spinf/moderation pack files of spinf-prompts;
+# both checkouts are optional (the tests skip without them). SPINF_SERVE_REPO / SPINF_PROMPTS_REPO (repository variables) and
+# SPINF_SERVE_TOKEN / SPINF_PROMPTS_TOKEN (secrets) point a fork or a mirror at its own copies; unset, the public ones are used.
+name: ci
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        id: serve
+        continue-on-error: true
+        with:
+          repository: ${{ vars.SPINF_SERVE_REPO || 'spinfinc/spinf-serve' }}
+          token: ${{ secrets.SPINF_SERVE_TOKEN || github.token }}
+          path: .spinf-serve
+      - uses: actions/checkout@v7
+        id: prompts
+        continue-on-error: true
+        with:
+          repository: ${{ vars.SPINF_PROMPTS_REPO || 'spinfinc/spinf-prompts' }}
+          token: ${{ secrets.SPINF_PROMPTS_TOKEN || github.token }}
+          path: .spinf-prompts
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv sync --frozen
+      - run: uv run ruff check . && uv run ruff format --check src tests
+      - run: uv run pytest
+        env:
+          SPINF_SERVE_DIR: ${{ steps.serve.outcome == 'success' && format('{0}/.spinf-serve', github.workspace) || '' }}
+          SPINF_PROMPTS_DIR: ${{ steps.prompts.outcome == 'success' && format('{0}/.spinf-prompts', github.workspace) || '' }}

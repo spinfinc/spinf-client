@@ -1,0 +1,43 @@
+[project]
+name = "spinf-client"
+version = "0.3.0"
+description = "Python client for the spinf scoring API, hosted or self-hosted with spinf-serve: scored queries, extraction slots, images and video frames, prompt packs and content moderation"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.27"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://spinf.com"
+Repository = "https://github.com/spinfinc/spinf-client"
+Server = "https://github.com/spinfinc/spinf-serve"
+Packs = "https://github.com/spinfinc/spinf-prompts"
+
+[project.optional-dependencies]
+media = ["pillow>=10"]  # image resizing; video frames also need the ffmpeg / ffprobe binaries on PATH
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.13", "pillow>=10"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spinf_client"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["src/spinf_client/_pipeline.py"]  # spinf-serve's pipeline.py, copied verbatim (its line length is 140)
