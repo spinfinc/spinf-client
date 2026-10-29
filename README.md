@@ -104,7 +104,7 @@ after its `mm:ss` timestamp (7 text tokens). `media.video_tokens(w, h, n)` gives
 
 ## Content moderation
 
-The hosted `spinf/moderation` pack gives every text a calibrated 0–1 score per category (sexual, child safety,
+The `spinf/moderation` pack (hosted or on your own server) gives every text a calibrated 0–1 score per category (sexual, child safety,
 violence, self-harm, hate, harassment, extremism, weapons, drugs, crime, fraud, hacking, privacy, spam, profanity,
 gore, gibberish, a general score and four topics), its percentile on normal traffic, and a safe / unsafe decision.
 The API does all of it in the call; nothing is computed here unless you ask.
